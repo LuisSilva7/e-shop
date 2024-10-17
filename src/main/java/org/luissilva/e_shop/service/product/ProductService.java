@@ -1,17 +1,21 @@
 package org.luissilva.e_shop.service.product;
 
+import lombok.RequiredArgsConstructor;
 import org.luissilva.e_shop.exceptions.ProductNotFoundException;
 import org.luissilva.e_shop.model.Product;
 import org.luissilva.e_shop.repository.ProductRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
+@RequiredArgsConstructor
 public class ProductService implements IProductService {
 
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     @Override
-    public Product addProduct(Product product) {
+    public Product addProduct(Product request) {
         return null;
     }
 
@@ -23,7 +27,9 @@ public class ProductService implements IProductService {
 
     @Override
     public void deleteProductById(Long id) {
-
+        productRepository.findById(id)
+                .ifPresentOrElse(productRepository::delete,
+                        () -> {throw new ProductNotFoundException("Product not found");});
     }
 
     @Override
@@ -33,36 +39,36 @@ public class ProductService implements IProductService {
 
     @Override
     public List<Product> getAllProducts() {
-        return null;
+        return productRepository.findAll();
     }
 
     @Override
     public List<Product> getProductsByCategory(String category) {
-        return null;
+        return productRepository.findByCategoryName(category);
     }
 
     @Override
     public List<Product> getProductsByBrand(String brand) {
-        return null;
+        return productRepository.findByBrand(brand);
     }
 
     @Override
     public List<Product> getProductsByCategoryAndBrand(String category, String brand) {
-        return null;
+        return productRepository.findByCategoryNameAndBrand(category, brand);
     }
 
     @Override
     public List<Product> getProductsByName(String name) {
-        return null;
+        return productRepository.findByName(name);
     }
 
     @Override
     public List<Product> getProductsByBrandAndName(String brand, String name) {
-        return null;
+        return productRepository.findByBrandAndName(brand, name);
     }
 
     @Override
     public Long countProductsByBrandAndName(String brand, String name) {
-        return null;
+        return productRepository.countByBrandAndName(brand, name);
     }
 }
