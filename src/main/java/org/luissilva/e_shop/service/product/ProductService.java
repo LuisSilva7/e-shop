@@ -2,21 +2,50 @@ package org.luissilva.e_shop.service.product;
 
 import lombok.RequiredArgsConstructor;
 import org.luissilva.e_shop.exceptions.ProductNotFoundException;
+import org.luissilva.e_shop.model.Category;
 import org.luissilva.e_shop.model.Product;
+import org.luissilva.e_shop.repository.CategoryRepository;
 import org.luissilva.e_shop.repository.ProductRepository;
+import org.luissilva.e_shop.request.AddProductRequest;
+import org.luissilva.e_shop.request.ProductUpdateRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService implements IProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
-    public Product addProduct(Product request) {
-        return null;
+    public Product addProduct(AddProductRequest request) {
+        // check if the category is found in the DB
+        // if Yes, set it as new product category
+        // if No, then save it as new category
+        // Then set as the new product category.
+
+        Category category = Optional.ofNullable(categoryRepository.findByName(request.getCategory().getName()))
+                .orElseGet(() -> {
+                    Category newCategory = new Category(request.getCategory().getName());
+                    return categoryRepository.save(newCategory);
+                });
+        request.setCategory(category);
+
+        return productRepository.save(createProduct(request, category));
+    }
+
+    private Product createProduct(AddProductRequest request, Category category)  {
+        return new Product(
+                request.getName(),
+                request.getBrand(),
+                request.getPrice(),
+                request.getInventory(),
+                request.getDescription(),
+                category
+        );
     }
 
     @Override
@@ -33,8 +62,24 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public void updateProductById(Product product, Long proudctId) {
+    public Product updateProductById(ProductUpdateRequest request, Long productId) {
+        return productRepository.findById(productId)
+                .map(existingProduct -> updateExistingProduct(existingProduct, request))
+                .map(productRepository :: save)
+                .orElseThrow(() -> new ProductNotFoundException("Product Not found!"));
+    }
 
+    private Product updateExistingProduct(Product existingProduct, ProductUpdateRequest request) {
+        existingProduct.setName(request.getName());
+        existingProduct.setBrand(request.getBrand());
+        existingProduct.setPrice(request.getPrice());
+        existingProduct.setInventory(request.getInventory());
+        existingProduct.setDescription(request.getDescription());
+
+        Category category = categoryRepository.findByName(request.getCategory().getName());
+        existingProduct.setCategory(category);
+
+        return existingProduct;
     }
 
     @Override

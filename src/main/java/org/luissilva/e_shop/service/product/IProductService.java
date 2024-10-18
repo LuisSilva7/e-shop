@@ -1,15 +1,17 @@
 package org.luissilva.e_shop.service.product;
 
 import org.luissilva.e_shop.model.Product;
+import org.luissilva.e_shop.request.AddProductRequest;
+import org.luissilva.e_shop.request.ProductUpdateRequest;
 
 import java.util.List;
 
 public interface IProductService {
 
-    Product addProduct(Product product);
+    Product addProduct(AddProductRequest request);
     Product getProductById(Long id);
     void deleteProductById(Long id);
-    void updateProductById(Product product, Long proudctId);
+    Product updateProductById(ProductUpdateRequest request, Long proudctId);
     List<Product> getAllProducts();
     List<Product> getProductsByCategory(String category);
     List<Product> getProductsByBrand(String brand);
