@@ -1,13 +1,18 @@
 package org.luissilva.e_shop.service.product;
 
 import lombok.RequiredArgsConstructor;
+import org.luissilva.e_shop.dto.ImageDto;
+import org.luissilva.e_shop.dto.ProductDto;
 import org.luissilva.e_shop.exceptions.ProductNotFoundException;
 import org.luissilva.e_shop.model.Category;
+import org.luissilva.e_shop.model.Image;
 import org.luissilva.e_shop.model.Product;
 import org.luissilva.e_shop.repository.CategoryRepository;
+import org.luissilva.e_shop.repository.ImageRepository;
 import org.luissilva.e_shop.repository.ProductRepository;
 import org.luissilva.e_shop.request.AddProductRequest;
 import org.luissilva.e_shop.request.ProductUpdateRequest;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +24,8 @@ public class ProductService implements IProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ModelMapper modelMapper;
+    private final ImageRepository imageRepository;
 
     @Override
     public Product addProduct(AddProductRequest request) {
@@ -62,7 +69,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public Product updateProductById(ProductUpdateRequest request, Long productId) {
+    public Product updateProduct(ProductUpdateRequest request, Long productId) {
         return productRepository.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, request))
                 .map(productRepository :: save)
@@ -115,5 +122,21 @@ public class ProductService implements IProductService {
     @Override
     public Long countProductsByBrandAndName(String brand, String name) {
         return productRepository.countByBrandAndName(brand, name);
+    }
+
+    @Override
+    public List<ProductDto> getConvertedProducts(List<Product> products) {
+        return products.stream().map(this::convertToDto).toList();
+    }
+
+    @Override
+    public ProductDto convertToDto(Product product) {
+        ProductDto productDto = modelMapper.map(product, ProductDto.class);
+        List<Image> images = imageRepository.findByProductId(product.getId());
+        List<ImageDto> imageDtos = images.stream()
+                .map(image -> modelMapper.map(image, ImageDto.class))
+                .toList();
+        productDto.setImages(imageDtos);
+        return productDto;
     }
 }
